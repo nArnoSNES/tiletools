@@ -20,6 +20,9 @@ class Tile(object):
             raise ValueError("Tile is %ix%i in size, (%i,%i) is out of range" % (self._size,self._size,x,y))
         self._tiledata[y][x] = c
 
+    def __eq__(self,other):
+        return (str(self) == str(other))
+
     def __getitem__(self, i):
         return self._tiledata[i]
 
@@ -54,6 +57,16 @@ class Tile(object):
         result = map(chr,map(lambda x: int(x,2),result))
         return ''.join(result)
 
+    def renderImg(self, palette, index=0):
+        if (self._mode != 2 and index != 0):
+            raise ValueError("Tile is not 2bpp, palette index MUST be 0 (default)")
+        if not index in [0,4,8,12]:
+            raise ValueError("index value of %i is invalid" % index)
+        im = []
+        for line in self._tiledata:
+            im.append('{ ' + ' '.join(map(lambda c: "#%s" % palette[index+c].to_hex(),line)) + ' }')
+        return ' '.join(im)
+
     @staticmethod
     def from_str(s, bpp=2):
         _t = Tile(bpp)
@@ -69,3 +82,6 @@ class Tile(object):
             data.append(temp)
         _t._tiledata = data
         return _t
+
+
+

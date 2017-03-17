@@ -30,23 +30,24 @@ def palToTile(p, tilesize=tileSize):
 def modulo16(p, colors=ncolors):
 	return p % colors
 
-# Default Palette: DawnBringer 16 colors palette V1.0 (http://www.pixeljoint.com/forum/forum_posts.asp?TID=12795) 
-palette = [(20,12,28),
-		(68,36,52),
-		(48,52,109),
-		(78,74,78),
-		(133,76,48),
-		(52,101,36),
-		(208,70,72),
-		(117,113,97),
-		(89,125,206),
-		(210,125,44),
-		(133,149,161),
-		(109,170,44),
-		(210,170,153),
-		(109,194,202),
-		(218,212,94),
-		(222,238,214)]
+# Default Palette: DawnBringer 16 colors palette V1.0 (http://www.pixeljoint.com/forum/forum_posts.asp?TID=12795)
+# adapted to rgb5
+palette = [(16, 8, 24),
+        (64, 32, 48),
+        (48, 48, 104),
+        (72, 72, 72),
+        (128, 72, 48),
+        (48, 96, 32),
+        (208, 64, 72),
+        (112, 112, 96),
+        (88, 120, 200),
+        (208, 120, 40),
+        (128, 144, 160),
+        (104, 168, 40),
+        (208, 168, 152),
+        (104, 192, 200),
+        (216, 208, 88),
+        (216, 232, 208)]
 palette.extend([gridColor]) # grid color is added to palette, will be accessed by [-1] index
 palette = map(hexCode,palette)
 
@@ -61,7 +62,7 @@ tilenum = 0
 
 root = Tk()
 root.title("Raw Tiler %s" % version)
-root.geometry("565x410")
+root.geometry("1280x768")
 
 ABOUT_TEXT = """
 Raw Tiler %s by @n_Arno
@@ -231,15 +232,13 @@ def renderTileset(image, tileset, palette, size=setZoom, grid=False):
 	renderTile(image, tempTile, palette, size=size, grid=grid)
 
 def renderPalette(image, palette, size=palZoom, grid=False):
-	width = size
-	height = size
 	im = []
 	for i in range(2):
 		hl = []
 		for j in range(8):
 			hexcode = palette[i*8+j]
-			hl.append(" ".join([hexcode]*width))
-		im.append(" ".join(["{" + " ".join(hl) + "}"]*height))
+			hl.append(hexcode)
+		im.append("{" + " ".join(hl) + "}")
 	image.put(" ".join(im))
 
 mapFrm = Frame(root,relief=GROOVE, borderwidth=2)
@@ -261,8 +260,9 @@ setLbl.grid(padx=5, pady=5)
 palFrm = Frame(root,relief=GROOVE, borderwidth=2)
 palFrm.grid(row=1, column=0, padx=5, pady=5)
 Label(palFrm, text="Palette", state=DISABLED).grid(sticky=W)
-palImg = PhotoImage(width=palZoom*8, height=palZoom*2)
+palImg = PhotoImage(width=8, height=2)
 renderPalette(palImg, palette)
+palImg = palImg.zoom(palZoom,palZoom)
 palLbl = Label(palFrm, image=palImg, borderwidth=0)
 palLbl.grid(sticky=NW, padx=5, pady=5)
 

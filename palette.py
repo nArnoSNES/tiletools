@@ -4,8 +4,8 @@ class Color(object):
             raise ValueError('Color arg %i not in range(32768)' % c)
         self._color = c
 
-    def to_hex(self):
-        return '{0:04X}'.format(self._color)
+    def __eq__(self,other):
+        return (self._color == other._color)
 
     def __str__(self):
         _high = int('FF00',16)
@@ -39,6 +39,9 @@ class Color(object):
 
     def red255(self):
         return self.red()<<3
+
+    def to_hex(self):
+        return "%02x%02x%02x" % (self.red255(),self.green255(),self.blue255())
 
     @staticmethod
     def from_rgb(red=0,green=0,blue=0):
@@ -79,6 +82,9 @@ class Palette(object):
 
     def __iter__(self):
         return self
+        
+    def __eq__(self,other):
+        return (str(self) == str(other))
 
     def __getitem__(self, i):
         return self.palette[i]
