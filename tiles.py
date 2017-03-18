@@ -17,7 +17,7 @@ class Tile(object):
         if (c>15):
             raise ValueError("Tile is in 16 colors mode, %i is and invalid color index" % c)
         if (x<0 or x>7 or y<0 or y>7):
-            raise ValueError("Tile is %ix%i in size, (%i,%i) is out of range" % (self._size,self._size,x,y))
+            raise ValueError("Tile is %ix%i in size, (%i,%i) is out of range" % (8,8,x,y))
         self._tiledata[y][x] = c
 
     def __eq__(self,other):
@@ -66,6 +66,16 @@ class Tile(object):
         for line in self._tiledata:
             im.append('{ ' + ' '.join(map(lambda c: "#%s" % palette[index+c].to_hex(),line)) + ' }')
         return ' '.join(im)
+
+    def renderTile(self, palette, index=0):
+        if (self._mode != 2 and index != 0):
+            raise ValueError("Tile is not 2bpp, palette index MUST be 0 (default)")
+        if not index in [0,4,8,12]:
+            raise ValueError("index value of %i is invalid" % index)
+        tile = []
+        for line in self._tiledata:
+            tile.append(map(lambda c: "#%s" % palette[index+c].to_hex(),line))
+        return tile
 
     @staticmethod
     def from_str(s, bpp=2):
@@ -159,6 +169,38 @@ class TileVal(object):
         _s = [ int(_bits[0:8],2) , int(_bits[8:16],2) ]
         return ''.join(map(chr,_s))
 
+    def renderTile(self,tileset,palettes):
+        tile = tileset[self.tilenum].renderTile(palettes[self.palnum])
+        if (v==1):
+            tile = map(lambda x: x[::-1], tile)
+        if (p==1):
+            tile = tile[::-1]
+        return tile
+
 class Tilemap(object):
-    def __init__(self):
-        self.tilevals = [ [Tileval(0)] * 32 for i in range(32) ]
+    def __init__(self,h=32,w=32):
+        self.width = w
+        self.height = h
+        self.tilevals = [ [Tileval(0)] * w for i in range(h) ]
+
+    def set_tile(self,x,y,t):
+        if (x<0 or x>=self.width or y<0 or y>=self.height):
+            raise ValueError("Tilemap is %ix%i in size, (%i,%i) is out of range" % (self.width,self.height,x,y))
+        self.tilevals[y][x] = t
+
+    def __str__(self):
+        return ''.join(map(lambda line: ''.join(map(str,line)),self.tilevals))
+
+    def renderImg(self,tileset,palettes):
+        temp = map(lambda line: map(lambda x: x.renderTile(tileset,palettes),line),self.tilevals)
+        result = [[''] * self.width*8 for i in range(self.height*8)]
+        i = 0
+        for tile in temp:
+            column=i%self.height
+            row=int(i/self.width)
+            for j in range(8):
+                for k in range(8):
+                    result[row*8+j][column*8+k] = tile[j][k]
+            i = i + 1
+        return ' '.join(map(lambda line: '{ ' + ' '.join(line) + ' }',temp))
+        
