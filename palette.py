@@ -119,3 +119,41 @@ class Palette(object):
             c = f.read(2)
             _p.palette[i] = Color.from_str(c[::-1])
         return _p
+
+class Palettes(object):
+    def __init__(self):
+        self.current = 0
+        self.palettes = [ Palette() for i in range(4) ]
+    
+    def next(self):
+        try:
+            result = self.palettes[self.current]
+        except IndexError:
+            self.current = 0
+            raise StopIteration
+        self.current += 1
+        return result
+        
+    def __iter__(self):
+        return self
+
+    def __getitem__(self, i):
+        return self.palettes[i]
+
+    def __setitem__(self, i, p):
+        self.palettes[i] = p
+
+    def __len__(self):
+        return 4
+
+    def __eq__(self,other):
+        result = True
+        for i in range(4):
+            result = (result and self.palettes[i] == other.palettes[i])
+        return result
+
+    def renderImg(self):
+        im = []
+        for p in self.palettes:
+            im.append('{ ' + ' '.join(map(lambda c: "%s" % c.to_hex(),p))  + ' }')
+        return ' '.join(im)

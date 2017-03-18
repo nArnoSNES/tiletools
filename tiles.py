@@ -9,7 +9,7 @@ class Tile(object):
         self._tiledata = [[0] * 8 for i in range(8)]
 
     def display(self):
-        return '\n'.join([''.join(map(str,line)) for line in self._tiledata])
+        return '\n'.join([' '.join(map(str,line)) for line in self._tiledata])
         
     def set_color(self,x,y,c):
         if (self._mode == 0 and c>3):
@@ -83,5 +83,82 @@ class Tile(object):
         _t._tiledata = data
         return _t
 
+class Tileset(object):
+    def __init__(self,bpp=2):
+        if not (bpp == 2 or bpp ==4):
+            raise ValueError("Tileset can only contains tiles in 2bpp (4 colors) or 4bpp (16 colors) mode. %ibpp is invalid" % bpp)
+        self._mode = bpp
+        self.current = 0
+        self.tiles = []
+    
+    def next(self):
+        try:
+            result = self.tiles[self.current]
+        except IndexError:
+            self.current = 0
+            raise StopIteration
+        self.current += 1
+        return result
+        
+    def __iter__(self):
+        return self
 
+    def __getitem__(self, i):
+        return self.tiles[i]
 
+    def __setitem__(self, i, t):
+        if (t._mode != self._mode):
+            raise ValueError("Can't add a tile of %ibpp in tileset of %ibpp" % (t._mode,self._mode))
+        self.tiles[i] = t
+
+    def __len__(self):
+        return len(self.tiles)
+
+    def __eq__(self,other):
+        if len(self) != len(other):
+            return False
+        result = True
+        for i in range(len(self)):
+            result = (result and self.tiles[i] == other.tiles[i])
+        return result
+
+    def append(self,t):
+        if (len(self) == 1024):
+            raise IndexError("The tileset can only contains 1024 tiles max (32x32)")
+        if (t._mode != self._mode):
+            raise ValueError("Can't add a tile of %ibpp in tileset of %ibpp" % (t._mode,self._mode))
+        self.current = 0
+        self.tiles.append(t)
+        
+    def __str__(self):
+        result = []
+        for t in self.tiles:
+            result.append(str(t))
+        return ''.join(result)
+
+class TileVal(object):
+    def __init__(self,v=0,h=0,o=0,p=0,t):
+        if v not in [0,1]:
+            raise ValueError("Vertical flip is either 0 or 1")
+        if h not in [0,1]:
+            raise ValueError("Horizontal flip is either 0 or 1")
+        if o not in [0,1]:
+            raise ValueError("Priority bit is either 0 or 1")
+        if (p<0 or p>3):
+            raise ValueError("Palette number is between 0 and 3")
+        if (t<0 or t>1023):
+            raise ValueError("Tile number is between 0 and 1023")
+        self.vflip = v
+        self.hflip = h
+        self.order = o
+        self.palnum = p
+        self.tilenum = t
+
+    def __str__(self):
+        _bits = str(v) + str(h) + str(o) + '{0:03b}'.format(p) + '{0:010b}'.format(t)
+        _s = [ int(_bits[0:8],2) , int(_bits[8:16],2) ]
+        return ''.join(map(chr,_s))
+
+class Tilemap(object):
+    def __init__(self):
+        self.tilevals = [ [Tileval(0)] * 32 for i in range(32) ]
