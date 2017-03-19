@@ -8,9 +8,6 @@ class Tile(object):
         self._mode = bpp
         self._tiledata = [[0] * 8 for i in range(8)]
 
-    def display(self):
-        return '\n'.join([' '.join(map(str,line)) for line in self._tiledata])
-        
     def set_color(self,x,y,c):
         if (self._mode == 0 and c>3):
             raise ValueError("Tile is in 4 colors mode, %i is an invalid color index" % c)
@@ -146,8 +143,27 @@ class Tileset(object):
             result.append(str(t))
         return ''.join(result)
 
-class TileVal(object):
-    def __init__(self,v=0,h=0,o=0,p=0,t):
+    @staticmethod
+    def from_str(s,bpp=2):
+        if (len(s) % (bpp*8) != 0):
+            raise ValueError("String is not of valid length for %ibpp mode" % (bpp))
+        tiles = map(''.join,zip(*[iter(s)]*(bpp*8)))
+        result = Tileset(bpp=bpp)
+        for tile in tiles:
+            result.append(Tile.from_str(tile,bpp=bpp))
+        return result
+
+    @staticmethod
+    def from_file(f,bpp=2):
+        s = ''
+        b = f.read(1)
+        while b:
+            s += b
+            b = f.read(1)
+        return Tileset.from_str(s,bpp=bpp)
+
+class Tileval(object):
+    def __init__(self,t,v=0,h=0,o=0,p=0):
         if v not in [0,1]:
             raise ValueError("Vertical flip is either 0 or 1")
         if h not in [0,1]:
@@ -177,6 +193,13 @@ class TileVal(object):
             tile = tile[::-1]
         return tile
 
+    @staticmethod
+    def from_str(s):
+        if not (len(s) == 2):
+            raise ValueError('string %s is not a 2 char long' % s)
+        _bits = '{0:016b}'.format(ord(s[0])*256+ord(s[1]))
+        return Tileval(v=int(_bits[0],2),h=int(_bits[1],2),o=int(_bits[2],2),p=int(_bits[3:6],2),t=int(_bits[6:16],2))
+
 class Tilemap(object):
     def __init__(self,h=32,w=32):
         self.width = w
@@ -201,6 +224,23 @@ class Tilemap(object):
             for j in range(8):
                 for k in range(8):
                     result[row*8+j][column*8+k] = tile[j][k]
-            i = i + 1
-        return ' '.join(map(lambda line: '{ ' + ' '.join(line) + ' }',temp))
-        
+            i += 1
+        return ' '.join(map(lambda line: '{ ' + ' '.join(line) + ' }',result))
+
+    @staticmethod
+    def from_str(s,h=32,w=32):
+        if not (len(s) == 2*h*w):
+            raise ValueError('string is not a %i char long' % len(s))
+        tilevals = map(''.join,zip(*[iter(s)]*2))
+        result = Tilemap(h=h,w=w)
+        i = 0
+        for y in range(h):
+            for x in range(w):
+                result.set_tile(x,y,Tileval.from_str(tilevals[i]))
+                i += 1
+        return result
+
+    @staticmethod
+    def from_file(f,h=32,w=32):
+        s=f.read(2*h*w)
+        return Tilemap.from_str(s,h,w)
