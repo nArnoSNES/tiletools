@@ -1,4 +1,4 @@
-from palette import Palette, Color
+from palette import *
 
 class Tile(object):
     def __init__(self, bpp=2):
@@ -181,15 +181,15 @@ class Tileval(object):
         self.tilenum = t
 
     def __str__(self):
-        _bits = str(v) + str(h) + str(o) + '{0:03b}'.format(p) + '{0:010b}'.format(t)
+        _bits = str(self.vflip) + str(self.hflip) + str(self.order) + '{0:03b}'.format(self.palnum) + '{0:010b}'.format(self.tilenum)
         _s = [ int(_bits[0:8],2) , int(_bits[8:16],2) ]
         return ''.join(map(chr,_s))
 
     def renderTile(self,tileset,palettes):
         tile = tileset[self.tilenum].renderTile(palettes[self.palnum])
-        if (v==1):
+        if (self.vflip==1):
             tile = map(lambda x: x[::-1], tile)
-        if (p==1):
+        if (self.hflip==1):
             tile = tile[::-1]
         return tile
 
@@ -211,21 +211,25 @@ class Tilemap(object):
             raise ValueError("Tilemap is %ix%i in size, (%i,%i) is out of range" % (self.width,self.height,x,y))
         self.tilevals[y][x] = t
 
+    def get_tile(self,x,y):
+        if (x<0 or x>=self.width or y<0 or y>=self.height):
+            raise ValueError("Tilemap is %ix%i in size, (%i,%i) is out of range" % (self.width,self.height,x,y))
+        return self.tilevals[y][x]
+
     def __str__(self):
         return ''.join(map(lambda line: ''.join(map(str,line)),self.tilevals))
 
     def renderImg(self,tileset,palettes):
-        temp = map(lambda line: map(lambda x: x.renderTile(tileset,palettes),line),self.tilevals)
-        result = [[''] * self.width*8 for i in range(self.height*8)]
-        i = 0
-        for tile in temp:
-            column=i%self.height
-            row=int(i/self.width)
-            for j in range(8):
-                for k in range(8):
-                    result[row*8+j][column*8+k] = tile[j][k]
-            i += 1
-        return ' '.join(map(lambda line: '{ ' + ' '.join(line) + ' }',result))
+        table_render = map(lambda line: map(lambda x: x.renderTile(tileset,palettes),line),self.tilevals)
+        result = []
+        for line in table_render:
+            linetemp = [' '] * 8
+            for tile in line:
+                for i in range(8):
+                        linetemp[i]+=' '.join(tile[i])+' '
+            linetemp = ' '.join(map(lambda x: '{'+x+'}',linetemp))
+            result.append(linetemp)
+        return ' '.join(result)
 
     @staticmethod
     def from_str(s,h=32,w=32):
@@ -243,4 +247,4 @@ class Tilemap(object):
     @staticmethod
     def from_file(f,h=32,w=32):
         s=f.read(2*h*w)
-        return Tilemap.from_str(s,h,w)
+        return Tilemap.from_str(s[::-1],h,w)

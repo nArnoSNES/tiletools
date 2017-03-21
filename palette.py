@@ -157,3 +157,10 @@ class Palettes(object):
         for p in self.palettes:
             im.append('{ ' + ' '.join(map(lambda c: "%s" % c.to_hex(),p))  + ' }')
         return ' '.join(im)
+
+    @staticmethod
+    def from_file(f):
+        _ps = Palettes()
+        for i in range(4):
+            _ps[i] = Palette.from_file(f)
+        return _ps
