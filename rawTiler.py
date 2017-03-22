@@ -1,64 +1,26 @@
 # ------------------------------------
-#	Raw Tiler by n_Arno
-#	Very simple raw SNES GFX editor.
-#	Quick and Ugly dev: not efficient.
+#    Raw Tiler by n_Arno
+#    Very simple raw SNES GFX editor.
+#    Quick and Ugly dev: not efficient.
 # ------------------------------------
 
 import sys
 from Tkinter import *
 import tkFileDialog
-from palette import Palette,Color
+from tiles import *
+
+# Temp ----------------------------
+with open('title.pal','rb') as f:
+    ps = Palettes.from_file(f)
+
+with open('title.pic','rb') as f:
+    ts = Tileset.from_file(f,bpp=4)
+
+with open('title.map','rb') as f:
+    tm = Tilemap.from_file(f,h=28)
+# Temp ----------------------------
 
 version = "V0.1"
-
-gridSize = 32
-tileSize = 8
-setZoom = 1
-mapZoom = 1
-palZoom = 20
-tilZoom = 8
-ncolors = 16
-gridColor = (255,0,255)
-tilGrid = True
-
-def hexCode(p):
-	return "#%02x%02x%02x" % p
-
-def palToTile(p, tilesize=tileSize):
-	return [[p] * tilesize for i in range(tilesize)]
-
-def modulo16(p, colors=ncolors):
-	return p % colors
-
-# Default Palette: DawnBringer 16 colors palette V1.0 (http://www.pixeljoint.com/forum/forum_posts.asp?TID=12795)
-# adapted to rgb5
-palette = [(16, 8, 24),
-        (64, 32, 48),
-        (48, 48, 104),
-        (72, 72, 72),
-        (128, 72, 48),
-        (48, 96, 32),
-        (208, 64, 72),
-        (112, 112, 96),
-        (88, 120, 200),
-        (208, 120, 40),
-        (128, 144, 160),
-        (104, 168, 40),
-        (208, 168, 152),
-        (104, 192, 200),
-        (216, 208, 88),
-        (216, 232, 208)]
-palette.extend([gridColor]) # grid color is added to palette, will be accessed by [-1] index
-palette = map(hexCode,palette)
-
-tileset = range(gridSize*gridSize)
-tileset = map(modulo16,tileset)
-tileset = map(palToTile,tileset)
-
-tilemap = [0,1,2]*(int(gridSize*gridSize/3))
-tilemap.extend([0]*((gridSize*gridSize)%3))
-
-tilenum = 0
 
 root = Tk()
 root.title("Raw Tiler %s" % version)
@@ -116,35 +78,28 @@ V4gANhuyzFgaZJPKHOY33WnIetrzngVBAT73yQTPhgQEADs=
 ''' # base64 encoded CC BY-NC-SA gif icon
 
 def about():
-	toplevel = Toplevel()
-	toplevel.attributes("-toolwindow",1) # Windows only :-/
-	toplevel.title("About...")
-	Label(toplevel, text=ABOUT_TEXT, height=0, width=100).grid(row=0,columnspan=2)
-	licImg = PhotoImage(data=LIC_ICON)
-	lab = Label(toplevel, image=licImg)
-	lab.image = licImg # needed to avoid garbage collection
-	lab.grid(row=1, column=0)
-	Button(toplevel, text="OK", width=15, command=toplevel.destroy).grid(row=1, column=1)
-	toplevel.focus_force()
+    toplevel = Toplevel()
+    toplevel.attributes("-toolwindow",1) # Windows only :-/
+    toplevel.title("About...")
+    Label(toplevel, text=ABOUT_TEXT, height=0, width=100).grid(row=0,columnspan=2)
+    licImg = PhotoImage(data=LIC_ICON)
+    lab = Label(toplevel, image=licImg)
+    lab.image = licImg # needed to avoid garbage collection
+    lab.grid(row=1, column=0)
+    Button(toplevel, text="OK", width=15, command=toplevel.destroy).grid(row=1, column=1)
+    toplevel.focus_force()
 
 def default_cmd():
-	pass
+    pass
 
 def loadPal():
-	ftypes = [('Palette Files', '*.pal'), ('All files', '*')]
-	dlg = tkFileDialog.Open(root, filetypes = ftypes)
-	fl = dlg.show()
+    ftypes = [('Palette Files', '*.pal'), ('All files', '*')]
+    dlg = tkFileDialog.Open(root, filetypes = ftypes)
+    fl = dlg.show()
 
-	if fl != '':
-		with open(fl,'rb') as f:
-			p = Palette.from_file(f)
-		p = map(lambda x: (x.red255(),x.blue255(),x.green255()),p)
-		p.extend([gridColor]) # grid color is added to palette, will be accessed by [-1] index
-		palette = map(hexCode,p)
-		renderPalette(palImg, palette)
-		renderTileset(setImg, tileset, palette, grid=False)
-		renderTilemap(mapImg, tileset, tilemap, palette, grid=False)
-		renderTile(tilImg, tileset[tilenum], palette)
+    if fl != '':
+        with open(fl,'rb') as f:
+            pass
 
 menubar = Menu(root)
 
@@ -184,93 +139,43 @@ menubar.add_command(label="About", command=about)
 # display the menu
 root.config(menu=menubar)
 
-
-
-def fillTileSet(tileset, gridsize=gridSize):
-	result = tileset
-	result.extend([0 for i in range(len(tileset) - gridsize*gridsize)])
-	return result
-
-def convertTileData(tiledata, gridsize=gridSize, tilesize=tileSize):
-	result = [[0] * gridsize*tilesize for i in range(gridsize*tilesize)]
-	i = 0
-	for tile in tiledata:
-		column=i%gridsize
-		row=int(i/gridsize)
-		for j in range(tilesize):
-			for k in range(tilesize):
-				result[row*tilesize+j][column*tilesize+k] = tile[j][k]
-		i = i + 1
-	return result
-
-def renderTile(image, tile, palette, size=tilZoom, grid=tilGrid):
-	sepPoint = ""
-	setLine = " "
-	im = []
-	for line in tile:
-		hl = []
-		for pixel in line:
-			hexcode = palette[pixel]
-			hl.append(" ".join([hexcode]*size))
-			if grid:
-				hl.append(palette[-1])
-		if grid:
-			hl.append(" ".join([palette[-1]]*size))
-		im.append(" ".join(["{" + " ".join(hl) + "}"]*size))
-	image.put(" ".join(im))
-
-def renderTilemap(image, tileset, tilemap, palette, size=mapZoom, grid=False):
-	tileData = []
-	for tile in tilemap:
-		tileData.append(tileset[tile])
-	tempTile = convertTileData(tileData)
-	renderTile(image, tempTile, palette, size=size, grid=grid)
-
-def renderTileset(image, tileset, palette, size=setZoom, grid=False):
-	tileData = fillTileSet(tileset)
-	tempTile = convertTileData(tileData)
-	renderTile(image, tempTile, palette, size=size, grid=grid)
-
-def renderPalette(image, palette, size=palZoom, grid=False):
-	im = []
-	for i in range(2):
-		hl = []
-		for j in range(8):
-			hexcode = palette[i*8+j]
-			hl.append(hexcode)
-		im.append("{" + " ".join(hl) + "}")
-	image.put(" ".join(im))
-
+# Tilemap
 mapFrm = Frame(root,relief=GROOVE, borderwidth=2)
 mapFrm.grid(row=0, column=0, padx=5, pady=5)
 Label(mapFrm, text="Tilemap", state=DISABLED).grid(sticky=W)
-mapImg = PhotoImage(width=gridSize*tileSize*mapZoom, height=gridSize*tileSize*mapZoom)
-renderTilemap(mapImg, tileset, tilemap, palette, grid=False)
-tilLbl = Label(mapFrm, image=mapImg, borderwidth=0)
-tilLbl.grid(sticky=N, padx=5, pady=5)
+mapImg = PhotoImage(width=32*8, height=32*8)
+mapImg.put(tm.renderImg(ts,ps))
+mapImg = mapImg.zoom(2,2)
+mapLbl = Label(mapFrm, image=mapImg, borderwidth=0)
+mapLbl.grid(sticky=N, padx=5, pady=5)
 
+# Tileset
 setFrm = Frame(root,relief=GROOVE, borderwidth=2)
 setFrm.grid(row=0, column=1, padx=5, pady=5)
 Label(setFrm, text="Tileset", state=DISABLED).grid(sticky=W)
-setImg = PhotoImage(width=gridSize*tileSize*setZoom, height=gridSize*tileSize*setZoom)
-renderTileset(setImg, tileset, palette, grid=False)
+setImg = PhotoImage(width=32*8, height=32*8)
+setImg.put(ts.renderImg(ps[0]))
+setImg = setImg.zoom(2,2)
 setLbl = Label(setFrm, image=setImg, borderwidth=0)
 setLbl.grid(padx=5, pady=5)
 
+# Palettes
 palFrm = Frame(root,relief=GROOVE, borderwidth=2)
 palFrm.grid(row=1, column=0, padx=5, pady=5)
 Label(palFrm, text="Palette", state=DISABLED).grid(sticky=W)
-palImg = PhotoImage(width=8, height=2)
-renderPalette(palImg, palette)
-palImg = palImg.zoom(palZoom,palZoom)
+palImg = PhotoImage(width=16, height=4)
+palImg.put(ps.renderImg())
+palImg = palImg.zoom(10,10)
 palLbl = Label(palFrm, image=palImg, borderwidth=0)
 palLbl.grid(sticky=NW, padx=5, pady=5)
 
+# One Tile
 tilFrm = Frame(root,relief=GROOVE, borderwidth=2)
 tilFrm.grid(row=1, column=1, padx=5, pady=5)
 Label(tilFrm, text="Selected Tile", state=DISABLED).grid(sticky=W)
-tilImg = PhotoImage(width=tileSize*tilZoom+tilGrid*tileSize, height=tileSize*tilZoom+tilGrid*tileSize)
-renderTile(tilImg, tileset[tilenum], palette)
+tilImg = PhotoImage(width=8, height=8)
+tilImg.put(ts[0].renderImg(ps[0]))
+tilImg = tilImg.zoom(10,10)
 tilLbl = Label(tilFrm, image=tilImg, borderwidth=0)
 tilLbl.grid(padx=5, pady=5, sticky=W)
 
