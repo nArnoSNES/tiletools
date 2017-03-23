@@ -77,15 +77,20 @@ class Tile(object):
     @staticmethod
     def from_str(s, bpp=2):
         _t = Tile(bpp)
-        data = []
         if (len(s) != bpp*8):
             raise ValueError("String is not of valid length %i for %ibpp mode" % (8*bpp,bpp))
-        for line in map(''.join,zip(*[iter(s)]*bpp)):
-            bytes = map(lambda x: '{0:08b}'.format(x),map(ord,line))
-            temp = [0] * 8
-            for pixel in range(8):
-                for plane in range(bpp):
-                    temp[pixel] += int(bytes[plane][pixel])*(2**plane)
+        data = []
+        bitplane = ['']*bpp
+        bitplane[0]=s[0:2*8:2]
+        bitplane[1]=s[1:2*8:2]
+        if (bpp==4):
+            bitplane[2]=s[16:4*8:2]
+            bitplane[3]=s[17:4*8:2]
+        for line in range(8):
+            temp = [0]*8
+            for col in range(8):
+                for p in range(bpp):
+                    temp[col]+=int('{0:08b}'.format(ord(bitplane[p][line]))[col],2)*(2**p)
             data.append(temp)
         _t._tiledata = data
         return _t
@@ -202,9 +207,9 @@ class Tileval(object):
 
     def renderTile(self,tileset,palettes):
         tile = tileset[self.tilenum].renderTile(palettes[self.palnum])
-        if (self.vflip==1):
+        if (self.vflip==0):
             tile = map(lambda x: x[::-1], tile)
-        if (self.hflip==1):
+        if (self.hflip==0):
             tile = tile[::-1]
         return tile
 
