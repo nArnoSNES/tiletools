@@ -5,8 +5,11 @@
 # ------------------------------------
 
 import sys
+
 from Tkinter import *
+from tkMessageBox import *
 import tkFileDialog
+
 from tiles import *
 
 # Temp ----------------------------
@@ -19,6 +22,18 @@ with open('title.pic','rb') as f:
 with open('title.map','rb') as f:
     tm = Tilemap.from_file(f,h=28)
 # Temp ----------------------------
+
+def clickMap(event):
+    showinfo('Tilemap clicked at', '%i,%i'%(event.x/(32*2),event.y/(32*2)))
+
+def clickSet(event):
+    showinfo('Tileset clicked at', '%i,%i'%(event.x/(32*2),event.y/(32*2)))
+
+def ClickPal(event):
+    showinfo('Palette clicked at', '%i,%i'%(event.x/(10),event.y/(10)))
+
+def ClickTil(event):
+    showinfo('Tile clicked at', '%i,%i'%(event.x/(10),event.y/(10)))
 
 version = "V0.1"
 
@@ -140,43 +155,47 @@ menubar.add_command(label="About", command=about)
 root.config(menu=menubar)
 
 # Tilemap
-mapFrm = Frame(root,relief=GROOVE, borderwidth=2)
-mapFrm.grid(row=0, column=0, padx=5, pady=5)
-Label(mapFrm, text="Tilemap", state=DISABLED).grid(sticky=W)
-mapImg = PhotoImage(width=32*8, height=32*8)
-mapImg.put(tm.renderImg(ts,ps))
-mapImg = mapImg.zoom(2,2)
-mapLbl = Label(mapFrm, image=mapImg, borderwidth=0)
-mapLbl.grid(sticky=N, padx=5, pady=5)
+lblMap = LabelFrame(root, text="Tilemap", padx=5, pady=5)
+lblMap.grid(row=0,column=0)
+cnvMap = Canvas(lblMap, bd=0, width=32*8*2, height=32*8*2)
+cnvMap.grid(row=0,column=0)
+imgMap = PhotoImage(width=32*8, height=32*8)
+imgMap.put(tm.renderImg(ts,ps))
+imgMap = imgMap.zoom(2,2)
+cnvMap.create_image(0,0,image=imgMap,anchor="nw")
+cnvMap.bind("<Button-1>", clickMap)
 
 # Tileset
-setFrm = Frame(root,relief=GROOVE, borderwidth=2)
-setFrm.grid(row=0, column=1, padx=5, pady=5)
-Label(setFrm, text="Tileset", state=DISABLED).grid(sticky=W)
-setImg = PhotoImage(width=32*8, height=32*8)
-setImg.put(ts.renderImg(ps[0]))
-setImg = setImg.zoom(2,2)
-setLbl = Label(setFrm, image=setImg, borderwidth=0)
-setLbl.grid(padx=5, pady=5)
+lblSet = LabelFrame(root, text="Tileset", padx=5, pady=5)
+lblSet.grid(row=0,column=1)
+cnvSet = Canvas(lblSet, bd=0, width=32*8*2, height=32*8*2)
+cnvSet.grid(row=0,column=0)
+imgSet = PhotoImage(width=32*8, height=32*8)
+imgSet.put(ts.renderImg(ps[0]))
+imgSet = imgSet.zoom(2,2)
+cnvSet.create_image(0,0,image=imgSet,anchor="nw")
+cnvSet.bind("<Button-1>", clickSet)
 
 # Palettes
-palFrm = Frame(root,relief=GROOVE, borderwidth=2)
-palFrm.grid(row=1, column=0, padx=5, pady=5)
-Label(palFrm, text="Palette", state=DISABLED).grid(sticky=W)
-palImg = PhotoImage(width=16, height=4)
-palImg.put(ps.renderImg())
-palImg = palImg.zoom(10,10)
-palLbl = Label(palFrm, image=palImg, borderwidth=0)
-palLbl.grid(sticky=NW, padx=5, pady=5)
+lblPal = LabelFrame(root, text="Palettes", padx=5, pady=5)
+lblPal.grid(row=1,column=0)
+cnvPal = Canvas(lblPal, bd=0, width=16*10, height=4*10)
+cnvPal.grid(row=0,column=0)
+imgPal = PhotoImage(width=16, height=4)
+imgPal.put(ps.renderImg())
+imgPal = imgPal.zoom(10,10)
+cnvPal.create_image(0,0,image=imgPal,anchor="nw")
+cnvPal.bind("<Button-1>", ClickPal)
 
-# One Tile
-tilFrm = Frame(root,relief=GROOVE, borderwidth=2)
-tilFrm.grid(row=1, column=1, padx=5, pady=5)
-Label(tilFrm, text="Selected Tile", state=DISABLED).grid(sticky=W)
-tilImg = PhotoImage(width=8, height=8)
-tilImg.put(ts[0].renderImg(ps[0]))
-tilImg = tilImg.zoom(10,10)
-tilLbl = Label(tilFrm, image=tilImg, borderwidth=0)
-tilLbl.grid(padx=5, pady=5, sticky=W)
+# Tile
+lblTil = LabelFrame(root, text="Tile", padx=5, pady=5)
+lblTil.grid(row=1,column=1)
+cnvTil = Canvas(lblTil, bd=0, width=8*10, height=8*10)
+cnvTil.grid(row=0,column=0)
+imgTil = PhotoImage(width=8, height=8)
+imgTil.put(ts[0].renderImg(ps[0]))
+imgTil = imgTil.zoom(10,10)
+cnvTil.create_image(0,0,image=imgTil,anchor="nw")
+cnvTil.bind("<Button-1>", ClickTil)
 
 root.mainloop()
