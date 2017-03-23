@@ -207,9 +207,9 @@ class Tileval(object):
 
     def renderTile(self,tileset,palettes):
         tile = tileset[self.tilenum].renderTile(palettes[self.palnum])
-        if (self.vflip==0):
+        if (self.vflip==1):
             tile = map(lambda x: x[::-1], tile)
-        if (self.hflip==0):
+        if (self.hflip==1):
             tile = tile[::-1]
         return tile
 
@@ -255,7 +255,7 @@ class Tilemap(object):
     def from_str(s,h=32,w=32):
         if not (len(s) == 2*h*w):
             raise ValueError('string is not a %i char long' % len(s))
-        tilevals = map(''.join,zip(*[iter(s)]*2))
+        tilevals = map(''.join,zip(*[iter(s)]*2))[::-1]
         result = Tilemap(h=h,w=w)
         i = 0
         for y in range(h):
