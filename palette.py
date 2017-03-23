@@ -155,7 +155,7 @@ class Palettes(object):
     def renderImg(self):
         im = []
         for p in self.palettes:
-            im.append('{ ' + ' '.join(map(lambda c: "%s" % c.to_hex(),p))  + ' }')
+            im.append('{ ' + ' '.join(map(lambda c: "#%s" % c.to_hex(),p))  + ' }')
         return ' '.join(im)
 
     @staticmethod

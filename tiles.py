@@ -143,6 +143,21 @@ class Tileset(object):
             result.append(str(t))
         return ''.join(result)
 
+    def renderImg(self,palette):
+        tempGrid = [[Tile(self._mode)]*32 for i in range(32)]
+        for i in range(len(self)):
+            tempGrid[i/32][i%32] = self[i]
+        table_render = map(lambda line: map(lambda x: x.renderTile(palette),line),tempGrid)
+        result = []
+        for line in table_render:
+            linetemp = [' '] * 8
+            for tile in line:
+                for i in range(8):
+                        linetemp[i]+=' '.join(tile[i])+' '
+            linetemp = ' '.join(map(lambda x: '{'+x+'}',linetemp))
+            result.append(linetemp)
+        return ' '.join(result)
+
     @staticmethod
     def from_str(s,bpp=2):
         if (len(s) % (bpp*8) != 0):
