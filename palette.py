@@ -43,6 +43,9 @@ class Color(object):
     def to_hex(self):
         return "%02x%02x%02x" % (self.red255(),self.green255(),self.blue255())
 
+    def renderImg(self):
+        return '{#%s}' % self.to_hex()
+
     @staticmethod
     def from_rgb(red=0,green=0,blue=0):
         if not (red>=0 and red<256):

@@ -4,7 +4,7 @@
 #    Quick and Ugly dev: not efficient.
 # ------------------------------------
 
-import sys
+import sys, re
 
 from Tkinter import *
 from tkMessageBox import *
@@ -30,16 +30,25 @@ def clickSet(event):
     showinfo('Tileset clicked at', '%i,%i'%(event.x/(32*2),event.y/(32*2)))
 
 def ClickPal(event):
-    showinfo('Palette clicked at', '%i,%i'%(event.x/(10),event.y/(10)))
+    showinfo('Palette clicked at', '%i,%i'%(event.x/(15),event.y/(15)))
 
 def ClickTil(event):
     showinfo('Tile clicked at', '%i,%i'%(event.x/(10),event.y/(10)))
+
+def validate_hex(var):
+    value = var.get()
+    new_value=''
+    for c in value:
+        if c in "0123456789abcdefABCDEF":
+            new_value+=c
+    new_value=new_value[0:6]
+    var.set(new_value)    
 
 version = "V0.1"
 
 root = Tk()
 root.title("Raw Tiler %s" % version)
-root.geometry("1280x768")
+root.geometry("1070x715")
 
 ABOUT_TEXT = """
 Raw Tiler %s by @n_Arno
@@ -163,6 +172,10 @@ imgMap = PhotoImage(width=32*8, height=32*8)
 imgMap.put(tm.renderImg(ts,ps))
 imgMap = imgMap.zoom(2,2)
 cnvMap.create_image(0,0,image=imgMap,anchor="nw")
+grdMap = []
+for i in range(2*32*8)[8*2::8*2]:
+    grdMap.append(cnvMap.create_line(0,i,32*8*2,i,dash=(2,2),fill='#444'))
+    grdMap.append(cnvMap.create_line(i,0,i,32*8*2,dash=(2,2),fill='#444'))
 cnvMap.bind("<Button-1>", clickMap)
 
 # Tileset
@@ -174,17 +187,37 @@ imgSet = PhotoImage(width=32*8, height=32*8)
 imgSet.put(ts.renderImg(ps[0]))
 imgSet = imgSet.zoom(2,2)
 cnvSet.create_image(0,0,image=imgSet,anchor="nw")
+grdSet = []
+for i in range(2*32*8)[8*2::8*2]:
+    grdSet.append(cnvSet.create_line(0,i,32*8*2,i,dash=(2,2),fill='#444'))
+    grdSet.append(cnvSet.create_line(i,0,i,32*8*2,dash=(2,2),fill='#444'))
 cnvSet.bind("<Button-1>", clickSet)
 
 # Palettes
 lblPal = LabelFrame(root, text="Palettes", padx=5, pady=5)
 lblPal.grid(row=1,column=0)
-cnvPal = Canvas(lblPal, bd=0, width=16*10, height=4*10)
+cnvPal = Canvas(lblPal, bd=0, width=16*15, height=4*15)
 cnvPal.grid(row=0,column=0)
 imgPal = PhotoImage(width=16, height=4)
 imgPal.put(ps.renderImg())
-imgPal = imgPal.zoom(10,10)
+imgPal = imgPal.zoom(15,15)
 cnvPal.create_image(0,0,image=imgPal,anchor="nw")
+grdPal = []
+for i in range(4*15)[15::15]:
+    grdPal.append(cnvPal.create_line(0,i,16*15,i,dash=(2,2),fill='#444'))
+for i in range(16*15)[15::15]:
+    grdPal.append(cnvPal.create_line(i,0,i,4*15,dash=(2,2),fill='#444'))
+pwnPal = PanedWindow(lblPal, orient=VERTICAL)
+pwnPal.grid(row=0,column=1)
+cnvCol = Canvas(pwnPal, bd=0, width=1*30, height=1*30)
+pwnPal.add(cnvCol)
+stvCol = StringVar()
+stvCol.trace('w', lambda nm, idx, mode, var=stvCol: validate_hex(var))
+pwnPal.add(Entry(pwnPal, width=6, textvariable=stvCol))
+imgCol = PhotoImage(width=1, height=1)
+imgCol.put(ps[0][4].renderImg())
+imgCol = imgCol.zoom(30,30)
+cnvCol.create_image(0,0,image=imgCol,anchor="nw")
 cnvPal.bind("<Button-1>", ClickPal)
 
 # Tile
@@ -196,6 +229,15 @@ imgTil = PhotoImage(width=8, height=8)
 imgTil.put(ts[0].renderImg(ps[0]))
 imgTil = imgTil.zoom(10,10)
 cnvTil.create_image(0,0,image=imgTil,anchor="nw")
+grdTil = []
+for i in range(10*8)[10::10]:
+    grdTil.append(cnvTil.create_line(0,i,10*8,i,dash=(2,2),fill='#444'))
+    grdTil.append(cnvTil.create_line(i,0,i,10*8,dash=(2,2),fill='#444'))
+pwnTil = PanedWindow(lblTil, orient=VERTICAL)
+pwnTil.grid(row=0,column=1)
+pwnTil.add(Checkbutton(pwnTil, text="vflip"))
+pwnTil.add(Checkbutton(pwnTil, text="hflip"))
+pwnTil.add(Checkbutton(pwnTil, text="prio"))
 cnvTil.bind("<Button-1>", ClickTil)
 
 root.mainloop()
