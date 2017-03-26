@@ -57,7 +57,7 @@ def clickSet(event):
     if (y==32):
         y = 31
     selTil.set(y*32+x)
-    renderTil(root)
+    renderAll(root)
 
 def ClickPal(event):
     col = event.x/(15)
@@ -68,9 +68,7 @@ def ClickPal(event):
     if pal == 4:
         pal = 3
     selPal.set(pal)
-    renderPal(root)
-    renderTil(root)
-    renderSet(root)
+    renderAll(root)
 
 def ClickTil(event):
     x = event.x/(10)
@@ -80,9 +78,7 @@ def ClickTil(event):
     if (y==8):
         y = 7
     ts[selTil.get()].set_color(x,y,selCol.get())
-    renderTil(root)
-    renderSet(root)
-    renderMap(root)
+    renderAll(root)
 
 def validate_hex(var):
     value = var.get()
@@ -294,6 +290,8 @@ def renderTil(root):
     cnvTil.bind("<Button-1>", ClickTil)
 
 def renderAll(root):
+    for child in root.winfo_children():
+        child.destroy()
     renderMap(root)
     renderSet(root)
     renderPal(root)
