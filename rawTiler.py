@@ -164,43 +164,44 @@ def loadPal():
         with open(fl,'rb') as f:
             pass
 
-menubar = Menu(root)
+def renderMenu(root):
+    menubar = Menu(root)
 
-filemenu = Menu(menubar, tearoff=0)
-filemenu.add_command(label="Open All", command=default_cmd)
-filemenu.add_command(label="Save All", command=default_cmd)
-filemenu.add_separator()
-filemenu.add_command(label="Exit", command=root.quit)
-menubar.add_cascade(label="File", menu=filemenu)
+    filemenu = Menu(menubar, tearoff=0)
+    filemenu.add_command(label="Open All", command=default_cmd)
+    filemenu.add_command(label="Save All", command=default_cmd)
+    filemenu.add_separator()
+    filemenu.add_command(label="Exit", command=root.quit)
+    menubar.add_cascade(label="File", menu=filemenu)
 
-mapmenu = Menu(menubar, tearoff=0)
-mapmenu.add_command(label="Load", command=default_cmd)
-mapmenu.add_command(label="Save", command=default_cmd)
-mapmenu.add_command(label="Save As", command=default_cmd)
-mapmenu.add_separator()
-mapmenu.add_command(label="Toggle Grid", command=default_cmd)
-menubar.add_cascade(label="Tilemap", menu=mapmenu)
+    mapmenu = Menu(menubar, tearoff=0)
+    mapmenu.add_command(label="Load", command=default_cmd)
+    mapmenu.add_command(label="Save", command=default_cmd)
+    mapmenu.add_command(label="Save As", command=default_cmd)
+    mapmenu.add_separator()
+    mapmenu.add_command(label="Toggle Grid", command=default_cmd)
+    menubar.add_cascade(label="Tilemap", menu=mapmenu)
 
-setmenu = Menu(menubar, tearoff=0)
-setmenu.add_command(label="Load", command=default_cmd)
-setmenu.add_command(label="Save", command=default_cmd)
-setmenu.add_command(label="Save As", command=default_cmd)
-setmenu.add_separator()
-setmenu.add_command(label="Toggle Grid", command=default_cmd)
-menubar.add_cascade(label="Tileset", menu=setmenu)
+    setmenu = Menu(menubar, tearoff=0)
+    setmenu.add_command(label="Load", command=default_cmd)
+    setmenu.add_command(label="Save", command=default_cmd)
+    setmenu.add_command(label="Save As", command=default_cmd)
+    setmenu.add_separator()
+    setmenu.add_command(label="Toggle Grid", command=default_cmd)
+    menubar.add_cascade(label="Tileset", menu=setmenu)
 
-palmenu = Menu(menubar, tearoff=0)
-palmenu.add_command(label="Load", command=loadPal)
-palmenu.add_command(label="Save", command=default_cmd)
-palmenu.add_command(label="Save As", command=default_cmd)
-palmenu.add_separator()
-palmenu.add_command(label="Toggle Grid", command=default_cmd)
-menubar.add_cascade(label="Palette", menu=palmenu)
+    palmenu = Menu(menubar, tearoff=0)
+    palmenu.add_command(label="Load", command=loadPal)
+    palmenu.add_command(label="Save", command=default_cmd)
+    palmenu.add_command(label="Save As", command=default_cmd)
+    palmenu.add_separator()
+    palmenu.add_command(label="Toggle Grid", command=default_cmd)
+    menubar.add_cascade(label="Palette", menu=palmenu)
 
-menubar.add_command(label="About", command=about)
+    menubar.add_command(label="About", command=about)
 
-# display the menu
-root.config(menu=menubar)
+    # display the menu
+    root.config(menu=menubar)
 
 # Tilemap
 def renderMap(root):
@@ -292,6 +293,7 @@ def renderTil(root):
 def renderAll(root):
     for child in root.winfo_children():
         child.destroy()
+    renderMenu(root)
     renderMap(root)
     renderSet(root)
     renderPal(root)
