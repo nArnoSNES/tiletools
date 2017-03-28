@@ -28,7 +28,7 @@ version = "V0.1"
 
 root = Tk()
 root.title("Raw Tiler %s" % version)
-root.geometry("1070x715")
+root.geometry("1070x900")
 
 selPal = IntVar()
 selPal.set(0)
@@ -207,7 +207,15 @@ def renderMenu(root):
 def renderMap(root):
     lblMap = LabelFrame(root, text="Tilemap", padx=5, pady=5)
     lblMap.grid(row=0,column=0)
-    cnvMap = Canvas(lblMap, bd=0, width=32*8*2, height=32*8*2)
+    cnvMap = Canvas(lblMap, bd=0, width=32*8*2, height=32*8*2,scrollregion=(0,0,64*8*2,64*8*2))
+    vbar=Scrollbar(lblMap,orient=VERTICAL)
+    vbar.grid(row=0,column=1,sticky='NS')
+    vbar.config(command=cnvMap.yview)
+    hbar=Scrollbar(lblMap,orient=HORIZONTAL)
+    hbar.grid(row=1,column=0,sticky='WE')
+    hbar.config(command=cnvMap.xview)
+    cnvMap.config(xscrollcommand=hbar.set, yscrollcommand=vbar.set)
+    cnvMap.config(width=32*8*2, height=32*8*2)
     cnvMap.grid(row=0,column=0)
     imgMap = PhotoImage(width=32*8, height=32*8)
     imgMap.put(tm.renderImg(ts,ps))
@@ -215,15 +223,27 @@ def renderMap(root):
     cnvMap.create_image(0,0,image=imgMap,anchor="nw")
     cnvMap.image = imgMap # Needed to avoid garbage collection
     grdMap = []
-    for i in range(2*32*8)[8*2::8*2]:
-        grdMap.append(cnvMap.create_line(0,i,32*8*2,i,dash=(2,2),fill='#444'))
-        grdMap.append(cnvMap.create_line(i,0,i,32*8*2,dash=(2,2),fill='#444'))
+    for i in range(2*64*8)[8*2::8*2]:
+        grdMap.append(cnvMap.create_line(0,i,64*8*2,i,dash=(2,2),fill='#444'))
+        grdMap.append(cnvMap.create_line(i,0,i,64*8*2,dash=(2,2),fill='#444'))
     cnvMap.bind("<Button-1>", clickMap)
+
+# Tilemap
+def renderPvw(root):
+    lblPvw = LabelFrame(root, text="Preview", padx=5, pady=5)
+    lblPvw.grid(row=1,column=0)
+    cnvPvw = Canvas(lblPvw, bd=0, width=64*8/2, height=64*8/2)
+    cnvPvw.grid(row=0,column=0)
+    imgPvw = PhotoImage(width=64*8, height=64*8)
+    imgPvw.put(tm.renderImg(ts,ps))
+    imgPvw = imgPvw.subsample(2)
+    cnvPvw.create_image(0,0,image=imgPvw,anchor="nw")
+    cnvPvw.image = imgPvw # Needed to avoid garbage collection
 
 # Tileset
 def renderSet(root):
     lblSet = LabelFrame(root, text="Tileset", padx=5, pady=5)
-    lblSet.grid(row=0,column=1)
+    lblSet.grid(row=0,column=1,columnspan=2)
     cnvSet = Canvas(lblSet, bd=0, width=32*8*2, height=32*8*2)
     cnvSet.grid(row=0,column=0)
     imgSet = PhotoImage(width=32*8, height=32*8)
@@ -237,10 +257,32 @@ def renderSet(root):
         grdSet.append(cnvSet.create_line(i,0,i,32*8*2,dash=(2,2),fill='#444'))
     cnvSet.bind("<Button-1>", clickSet)
 
+# Tile
+def renderTil(root):
+    lblTil = LabelFrame(root, text="Tile", padx=5, pady=5)
+    lblTil.grid(row=1,column=1,sticky='N')
+    cnvTil = Canvas(lblTil, bd=0, width=8*10, height=8*10)
+    cnvTil.grid(row=0,column=0)
+    imgTil = PhotoImage(width=8, height=8)
+    imgTil.put(ts[selTil.get()].renderImg(ps[selPal.get()]))
+    imgTil = imgTil.zoom(10,10)
+    cnvTil.create_image(0,0,image=imgTil,anchor="nw")
+    cnvTil.image = imgTil # needed to avoid garbage collection
+    grdTil = []
+    for i in range(10*8)[10::10]:
+        grdTil.append(cnvTil.create_line(0,i,10*8,i,dash=(2,2),fill='#444'))
+        grdTil.append(cnvTil.create_line(i,0,i,10*8,dash=(2,2),fill='#444'))
+    pwnTil = PanedWindow(lblTil, orient=VERTICAL)
+    pwnTil.grid(row=0,column=1)
+    pwnTil.add(Checkbutton(pwnTil, text="vflip"))
+    pwnTil.add(Checkbutton(pwnTil, text="hflip"))
+    pwnTil.add(Checkbutton(pwnTil, text="prio"))
+    cnvTil.bind("<Button-1>", ClickTil)
+
 # Palettes
 def renderPal(root):
     lblPal = LabelFrame(root, text="Palettes", padx=5, pady=5)
-    lblPal.grid(row=1,column=0)
+    lblPal.grid(row=1,column=2,sticky='N')
     cnvPal = Canvas(lblPal, bd=0, width=16*15, height=4*15)
     cnvPal.grid(row=0,column=0)
     imgPal = PhotoImage(width=16, height=4)
@@ -268,36 +310,15 @@ def renderPal(root):
     cnvCol.image = imgCol # needed to avoid garbage collection
     cnvPal.bind("<Button-1>", ClickPal)
 
-# Tile
-def renderTil(root):
-    lblTil = LabelFrame(root, text="Tile", padx=5, pady=5)
-    lblTil.grid(row=1,column=1)
-    cnvTil = Canvas(lblTil, bd=0, width=8*10, height=8*10)
-    cnvTil.grid(row=0,column=0)
-    imgTil = PhotoImage(width=8, height=8)
-    imgTil.put(ts[selTil.get()].renderImg(ps[selPal.get()]))
-    imgTil = imgTil.zoom(10,10)
-    cnvTil.create_image(0,0,image=imgTil,anchor="nw")
-    cnvTil.image = imgTil # needed to avoid garbage collection
-    grdTil = []
-    for i in range(10*8)[10::10]:
-        grdTil.append(cnvTil.create_line(0,i,10*8,i,dash=(2,2),fill='#444'))
-        grdTil.append(cnvTil.create_line(i,0,i,10*8,dash=(2,2),fill='#444'))
-    pwnTil = PanedWindow(lblTil, orient=VERTICAL)
-    pwnTil.grid(row=0,column=1)
-    pwnTil.add(Checkbutton(pwnTil, text="vflip"))
-    pwnTil.add(Checkbutton(pwnTil, text="hflip"))
-    pwnTil.add(Checkbutton(pwnTil, text="prio"))
-    cnvTil.bind("<Button-1>", ClickTil)
-
 def renderAll(root):
     for child in root.winfo_children():
         child.destroy()
     renderMenu(root)
     renderMap(root)
     renderSet(root)
-    renderPal(root)
+    renderPvw(root)
     renderTil(root)
+    renderPal(root)
 
 renderAll(root)
 root.mainloop()
